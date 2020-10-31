@@ -1,7 +1,7 @@
 # Branches ¡Importante!
 
  - Tendremos la rama de operadores básicos, la cual se llamará basic_operators_rxjs
- - Tendremos la rama avanzada con los subjects y los behaviour subjects directamente en master
+ - Tendremos la rama avanzada con los subjects y los behaviour subjects directamente en master y en la rama         subject_behavioursubject
 
 # Correr el servidor Backend Mock para el desarrollo y pruebas
 
