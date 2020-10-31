@@ -19,7 +19,6 @@ export function createHttpObservable(url: string) {
             .then(body => {
                 observer.next(body);
                 observer.complete();
-                observer.next();
             })
             .catch(err => {
                 observer.error(err);
