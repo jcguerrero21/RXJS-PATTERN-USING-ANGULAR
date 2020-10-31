@@ -1,6 +1,6 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { ActivatedRoute } from "@angular/router";
-import { Course } from "../model/course";
+import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
+import {ActivatedRoute} from "@angular/router";
+import {Course} from "../model/course";
 import {
     debounceTime,
     distinctUntilChanged,
@@ -11,12 +11,11 @@ import {
     concatMap,
     switchMap,
     withLatestFrom,
-    concatAll, shareReplay, throttle, throttleTime
+    concatAll, shareReplay
 } from 'rxjs/operators';
-import { merge, fromEvent, Observable, concat, interval, forkJoin } from 'rxjs';
-import { Lesson } from '../model/lesson';
-import { createHttpObservable } from '../common/util';
-import { RxJsLoggingLevel, debug, setRxJsLoggingLevel } from '../common/debug';
+import {merge, fromEvent, Observable, concat} from 'rxjs';
+import {Lesson} from '../model/lesson';
+import {createHttpObservable} from '../common/util';
 
 
 @Component({
@@ -26,8 +25,10 @@ import { RxJsLoggingLevel, debug, setRxJsLoggingLevel } from '../common/debug';
 })
 export class CourseComponent implements OnInit, AfterViewInit {
 
-    courseId: string;
-    course$: Observable<Course>;
+    courseId:string;
+
+    course$ : Observable<Course>;
+
     lessons$: Observable<Lesson[]>;
 
 
@@ -44,50 +45,21 @@ export class CourseComponent implements OnInit, AfterViewInit {
 
         this.course$ = createHttpObservable(`/api/courses/${this.courseId}`);
 
-        const lessons$ = this.loadLessons();
-
-        // tslint:disable-next-line: deprecation
-        forkJoin(this.course$, lessons$)
-            .pipe(
-                tap(([course, lessons]) => {
-                    console.log('course', course);
-                    console.log('lessons', lessons);
-                })
-            ).subscribe();
-
-        // debugging level operators
-
-        // this.course$ = createHttpObservable(`/api/courses/${this.courseId}`)
-        //     .pipe(
-        //         debug(RxJsLoggingLevel.INFO, 'course value ')
-        //     );
-
-        // setRxJsLoggingLevel(RxJsLoggingLevel.TRACE);
-
     }
 
     ngAfterViewInit() {
 
-        // debugging level operators
+        const searchLessons$ =  fromEvent<any>(this.input.nativeElement, 'keyup')
+            .pipe(
+                map(event => event.target.value),
+                debounceTime(400),
+                distinctUntilChanged(),
+                switchMap(search => this.loadLessons(search))
+            );
 
-        // this.lessons$ = fromEvent<any>(this.input.nativeElement, 'keyup')
-        //     .pipe(
-        //         map(event => event.target.value),
-        //         startWith(''),
-        //         debug(RxJsLoggingLevel.TRACE, 'search '),
-        //         debounceTime(400),
-        //         distinctUntilChanged(),
-        //         switchMap(search => this.loadLessons(search)),
-        //         debug(RxJsLoggingLevel.DEBUG, 'lessons value ')
-        //     );
+        const initialLessons$ = this.loadLessons();
 
-        // throttleTime operator
-
-        // fromEvent<any>(this.input.nativeElement, 'keyup')
-        //     .pipe(
-        //         map(event => event.target.value),
-        //         throttleTime(500)
-        //     ).subscribe(console.log);
+        this.lessons$ = concat(initialLessons$, searchLessons$);
 
     }
 
@@ -95,11 +67,20 @@ export class CourseComponent implements OnInit, AfterViewInit {
         return createHttpObservable(
             `/api/lessons?courseId=${this.courseId}&pageSize=100&filter=${search}`)
             .pipe(
-                map(res => res['payload'])
+                map(res => res["payload"])
             );
     }
 
 
-
-
 }
+
+
+
+
+
+
+
+
+
+
+
